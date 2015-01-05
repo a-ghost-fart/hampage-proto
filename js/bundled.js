@@ -88,6 +88,7 @@ Game.prototype.draw = function () {
     }
 
     var speed = 5;
+    var hench_speed = 2;
     if (this.input.is_key_down(Keys.UP)) {
         this.player.position.y -= speed;
     }
@@ -100,6 +101,14 @@ Game.prototype.draw = function () {
     if (this.input.is_key_down(Keys.RIGHT)) {
         this.player.position.x += speed;
     }
+    var hench_movement_x = (this.hench.position.x > this.player.position.x)
+        ? -hench_speed
+        : hench_speed;
+    var hench_movement_y = (this.hench.position.y > this.player.position.y)
+        ? -hench_speed
+        : hench_speed;
+    this.hench.position.x += hench_movement_x;
+    this.hench.position.y += hench_movement_y;
     // End horrible block of testing stuff
 
 
