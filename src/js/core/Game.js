@@ -59,7 +59,7 @@ Game.prototype.draw = function () {
     var how_far = Math.floor(Math.sqrt(xs + ys));
 
     var angle = Math.atan2(mouse.x - start.x, mouse.y - start.y);
-    var steps = Math.floor(how_far / 27);
+    var steps = Math.ceil(how_far / 27);
     var distance = how_far / steps;
     var sin = Math.sin(angle) * distance;
     var cos = Math.cos(angle) * distance;
