@@ -166,6 +166,7 @@ Hench.prototype.constructor = Hench;
 
 function Hench() {
     'use strict';
+    GameObject.call(this);
     this.ham_recollection = 100;
     this.ham_care = -0.01;
     this.ham_recollection_max = 100;
@@ -210,6 +211,7 @@ Player.prototype.constructor = Player;
 
 function Player() {
     'use strict';
+    GameObject.call(this);
     this.position = new Point(2, 36);
     this.bar = new ProgressBar(this.position, 100, 100, 'Ham Left');
 }

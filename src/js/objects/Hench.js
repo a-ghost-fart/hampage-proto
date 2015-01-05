@@ -7,6 +7,7 @@ Hench.prototype.constructor = Hench;
 
 function Hench() {
     'use strict';
+    GameObject.call(this);
     this.ham_recollection = 100;
     this.ham_care = -0.01;
     this.ham_recollection_max = 100;

@@ -7,6 +7,7 @@ Player.prototype.constructor = Player;
 
 function Player() {
     'use strict';
+    GameObject.call(this);
     this.position = new Point(2, 36);
     this.bar = new ProgressBar(this.position, 100, 100, 'Ham Left');
 }
