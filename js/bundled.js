@@ -75,7 +75,7 @@ Game.prototype.draw = function () {
     var cos = Math.cos(angle) * distance;
 
     var img = new Image();
-    img.src = '/assets/arm.png';
+    img.src = './assets/arm.png';
 
     this.context.strokeStyle = '#fff';
 
