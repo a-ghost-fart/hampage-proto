@@ -56,6 +56,7 @@ Game.prototype.draw = function () {
 
     this.clear_canvas();
 
+    // Horrible block of testing stuff
     var start = this.player.position;
     var mouse = this.input.get_mouse_position();
 
@@ -68,7 +69,7 @@ Game.prototype.draw = function () {
     var how_far = Math.floor(Math.sqrt(xs + ys));
 
     var angle = Math.atan2(mouse.x - start.x, mouse.y - start.y);
-    var steps = Math.floor(how_far / 30);
+    var steps = Math.floor(how_far / 27);
     var distance = how_far / steps;
     var sin = Math.sin(angle) * distance;
     var cos = Math.cos(angle) * distance;
@@ -78,13 +79,28 @@ Game.prototype.draw = function () {
 
     this.context.strokeStyle = '#fff';
 
-    for (var i = 1; i <= steps; i++) {
+    for (var i = 0; i <= steps; i++) {
         this.context.save();
         this.context.translate(start.x + (i * sin), start.y + (i * cos));
         this.context.rotate(-angle);
         this.context.drawImage(img, 0, 0);
         this.context.restore();
     }
+
+    var speed = 5;
+    if (this.input.is_key_down(Keys.UP)) {
+        this.player.position.y -= speed;
+    }
+    if (this.input.is_key_down(Keys.DOWN)) {
+        this.player.position.y += speed;
+    }
+    if (this.input.is_key_down(Keys.LEFT)) {
+        this.player.position.x -= speed;
+    }
+    if (this.input.is_key_down(Keys.RIGHT)) {
+        this.player.position.x += speed;
+    }
+    // End horrible block of testing stuff
 
 
     for (var entity in this.entities) {
