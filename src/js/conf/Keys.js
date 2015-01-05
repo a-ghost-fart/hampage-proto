@@ -1,7 +1,7 @@
 module.exports = {
-    'UP': 87,
-    'DOWN': 83,
-    'LEFT': 65,
-    'RIGHT': 68,
-    'ACTION': 32
+    'UP':       87, // W
+    'DOWN':     83, // S
+    'LEFT':     65, // A
+    'RIGHT':    68, // D
+    'ACTION':   32  // Space
 };
