@@ -1,10 +1,10 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 module.exports = {
-    'UP': 87,
-    'DOWN': 83,
-    'LEFT': 65,
-    'RIGHT': 68,
-    'ACTION': 32
+    'UP':       87, // W
+    'DOWN':     83, // S
+    'LEFT':     65, // A
+    'RIGHT':    68, // D
+    'ACTION':   32  // Space
 };
 
 },{}],2:[function(require,module,exports){
@@ -29,7 +29,7 @@ function Game() {
     this.context = this.canvas.getContext('2d');
     document.body.appendChild(this.canvas);
 
-    this.input = new Input();
+    this.input = new Input(this.canvas);
 
     this.game_loop();
 }
@@ -55,6 +55,37 @@ Game.prototype.draw = function () {
     'use strict';
 
     this.clear_canvas();
+
+    var start = this.player.position;
+    var mouse = this.input.get_mouse_position();
+
+    var xs = 0;
+    var ys = 0;
+    xs = mouse.x - start.x;
+    xs = xs * xs;
+    ys = mouse.y - start.y;
+    ys = ys * ys;
+    var how_far = Math.floor(Math.sqrt(xs + ys));
+
+    var angle = Math.atan2(mouse.x - start.x, mouse.y - start.y);
+    var steps = Math.floor(how_far / 30);
+    var distance = how_far / steps;
+    var sin = Math.sin(angle) * distance;
+    var cos = Math.cos(angle) * distance;
+
+    var img = new Image();
+    img.src = '/assets/arm.png';
+
+    this.context.strokeStyle = '#fff';
+
+    for (var i = 1; i <= steps; i++) {
+        this.context.save();
+        this.context.translate(start.x + (i * sin), start.y + (i * cos));
+        this.context.rotate(-angle);
+        this.context.drawImage(img, 0, 0);
+        this.context.restore();
+    }
+
 
     for (var entity in this.entities) {
         if (this.entities.hasOwnProperty(entity)) {
@@ -170,13 +201,28 @@ Player.prototype.draw = function (context) {
 module.exports = Player;
 
 },{"../util/Point":8,"../util/ProgressBar":9,"./GameObject":4}],7:[function(require,module,exports){
-function Input() {
+var Point = require('./Point');
+
+function Input(canvas) {
     'use strict';
     this.pressed = [];
+    this.mouse_location = new Point(0, 0);
 
+    canvas.addEventListener('mousemove', this.mouse_move.bind(this), false);
     document.addEventListener('keyup', this.keyup.bind(this), false);
     document.addEventListener('keydown', this.keydown.bind(this), false);
 }
+
+Input.prototype.mouse_move = function (event) {
+    'use strict';
+    this.mouse_location.x = event.clientX;
+    this.mouse_location.y = event.clientY;
+};
+
+Input.prototype.get_mouse_position = function () {
+    'use strict';
+    return this.mouse_location;
+};
 
 Input.prototype.is_key_down = function (keycode) {
     'use strict';
@@ -195,7 +241,7 @@ Input.prototype.keydown = function (event) {
 
 module.exports = Input;
 
-},{}],8:[function(require,module,exports){
+},{"./Point":8}],8:[function(require,module,exports){
 function Point(x, y) {
     'use strict';
     this.x = x;
