@@ -1,5 +1,10 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 module.exports = {
+    'FRICTION': 1
+};
+
+},{}],2:[function(require,module,exports){
+module.exports = {
     'UP':       87, // W
     'DOWN':     83, // S
     'LEFT':     65, // A
@@ -7,14 +12,20 @@ module.exports = {
     'ACTION':   32  // Space
 };
 
-},{}],2:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 var Player = require('../objects/Player');
 var Hench = require('../objects/Hench');
 var Input = require('../util/Input');
 var Keys = require('../conf/Keys');
+var MathUtils = require('../util/MathUtils');
 
 function Game() {
     'use strict';
+    this.last_frame = Date.now();
+    this.frame_count = 0;
+    this.fps = 0;
+    this.tick_time = 0;
+
     this.entities = [];
     this.player = new Player();
     this.hench = new Hench();
@@ -43,6 +54,24 @@ Game.prototype.game_loop = function () {
 
 Game.prototype.update = function () {
     'use strict';
+    var now = Date.now();
+    var delta = now - this.last_frame;
+    this.last_frame = now;
+    this.fps = this.calculate_fps(now);
+
+    // TODO: Abstract this input stuff
+    if (this.input.is_key_down(Keys.RIGHT)) {
+        this.player.add_motion(90, this.player.speed);
+    }
+    if (this.input.is_key_down(Keys.LEFT)) {
+        this.player.add_motion(270, this.player.speed);
+    }
+    if (this.input.is_key_down(Keys.UP)) {
+        this.player.add_motion(0, this.player.speed);
+    }
+    if (this.input.is_key_down(Keys.DOWN)) {
+        this.player.add_motion(180, this.player.speed);
+    }
 
     for (var entity in this.entities) {
         if (this.entities.hasOwnProperty(entity)) {
@@ -51,24 +80,32 @@ Game.prototype.update = function () {
     }
 };
 
+Game.prototype.calculate_fps = function (now) {
+    'use strict';
+    var fps;
+    this.frame_count++;
+    if (now - this.tick_time >= 1000) {
+        fps = this.frame_count;
+        this.tick_time = now;
+        this.frame_count = 0;
+    } else {
+        fps = this.fps;
+    }
+    return fps;
+};
+
 Game.prototype.draw = function () {
     'use strict';
 
     this.clear_canvas();
 
     // Horrible block of testing stuff
+    // TODO: Remove it all
     var start = this.player.position;
     var mouse = this.input.get_mouse_position();
+    var how_far = Math.floor(MathUtils.get_distance(start, mouse));
 
-    var xs = 0;
-    var ys = 0;
-    xs = mouse.x - start.x;
-    xs = xs * xs;
-    ys = mouse.y - start.y;
-    ys = ys * ys;
-    var how_far = Math.floor(Math.sqrt(xs + ys));
-
-    var angle = Math.atan2(mouse.x - start.x, mouse.y - start.y);
+    var angle = MathUtils.get_angle_of_line(start, mouse);
     var steps = Math.ceil(how_far / 27);
     var distance = how_far / steps;
     var sin = Math.sin(angle) * distance;
@@ -77,8 +114,6 @@ Game.prototype.draw = function () {
     var img = new Image();
     img.src = './assets/arm.png';
 
-    this.context.strokeStyle = '#fff';
-
     for (var i = 0; i <= steps; i++) {
         this.context.save();
         this.context.translate(start.x + (i * sin), start.y + (i * cos));
@@ -86,29 +121,6 @@ Game.prototype.draw = function () {
         this.context.drawImage(img, 0, 0);
         this.context.restore();
     }
-
-    var speed = 5;
-    var hench_speed = 2;
-    if (this.input.is_key_down(Keys.UP)) {
-        this.player.position.y -= speed;
-    }
-    if (this.input.is_key_down(Keys.DOWN)) {
-        this.player.position.y += speed;
-    }
-    if (this.input.is_key_down(Keys.LEFT)) {
-        this.player.position.x -= speed;
-    }
-    if (this.input.is_key_down(Keys.RIGHT)) {
-        this.player.position.x += speed;
-    }
-    var hench_movement_x = (this.hench.position.x > this.player.position.x)
-        ? -hench_speed
-        : hench_speed;
-    var hench_movement_y = (this.hench.position.y > this.player.position.y)
-        ? -hench_speed
-        : hench_speed;
-    this.hench.position.x += hench_movement_x;
-    this.hench.position.y += hench_movement_y;
     // End horrible block of testing stuff
 
 
@@ -130,7 +142,7 @@ Game.prototype.clear_canvas = function () {
 
 module.exports = Game;
 
-},{"../conf/Keys":1,"../objects/Hench":5,"../objects/Player":6,"../util/Input":7}],3:[function(require,module,exports){
+},{"../conf/Keys":2,"../objects/Hench":6,"../objects/Player":7,"../util/Input":8,"../util/MathUtils":9}],4:[function(require,module,exports){
 var Game = require('./core/Game');
 
 window.onload = function () {
@@ -138,25 +150,34 @@ window.onload = function () {
     window.g = new Game();
 };
 
-},{"./core/Game":2}],4:[function(require,module,exports){
+},{"./core/Game":3}],5:[function(require,module,exports){
 var Point = require('../util/Point');
+var MathUtils = require('../util/MathUtils');
+var Constants = require('../conf/Constants');
 
 function GameObject() {
     'use strict';
     this.position = new Point(0, 0);
 }
 
-GameObject.prototype.update = function () {
-    'use strict';
-};
+GameObject.prototype.update = function () {};
 
 GameObject.prototype.draw = function (context) {
     'use strict';
+    context.fillStyle = '#fff';
+    context.fillRect(this.position.x, this.position.y, 32, 32);
+
+    this.bar.draw(context);
+};
+
+GameObject.prototype.add_motion = function (angle, speed) {
+    'use strict';
+    this.position.x += speed * (Math.cos(angle));
 };
 
 module.exports = GameObject;
 
-},{"../util/Point":8}],5:[function(require,module,exports){
+},{"../conf/Constants":1,"../util/MathUtils":9,"../util/Point":10}],6:[function(require,module,exports){
 var GameObject = require('./GameObject');
 var Point = require('../util/Point');
 var ProgressBar = require('../util/ProgressBar');
@@ -190,21 +211,13 @@ Hench.prototype.update = function () {
     this.bar.position = this.position;
 };
 
-Hench.prototype.draw = function (context) {
-    'use strict';
-
-    context.fillStyle = '#fff';
-    context.fillRect(this.position.x, this.position.y, 32, 32);
-
-    this.bar.draw(context);
-};
-
 module.exports = Hench;
 
-},{"../util/Point":8,"../util/ProgressBar":9,"./GameObject":4}],6:[function(require,module,exports){
+},{"../util/Point":10,"../util/ProgressBar":11,"./GameObject":5}],7:[function(require,module,exports){
 var GameObject = require('./GameObject');
 var ProgressBar = require('../util/ProgressBar');
 var Point = require('../util/Point');
+var Constants = require('../conf/Constants');
 
 Player.prototype = new GameObject();
 Player.prototype.constructor = Player;
@@ -214,20 +227,13 @@ function Player() {
     GameObject.call(this);
     this.position = new Point(2, 36);
     this.bar = new ProgressBar(this.position, 100, 100, 'Ham Left');
+    this.accelleration = 0.1;
+    this.speed = 4;
 }
-
-Player.prototype.draw = function (context) {
-    'use strict';
-
-    context.fillStyle = '#fff';
-    context.fillRect(this.position.x, this.position.y, 32, 32);
-
-    this.bar.draw(context);
-};
 
 module.exports = Player;
 
-},{"../util/Point":8,"../util/ProgressBar":9,"./GameObject":4}],7:[function(require,module,exports){
+},{"../conf/Constants":1,"../util/Point":10,"../util/ProgressBar":11,"./GameObject":5}],8:[function(require,module,exports){
 var Point = require('./Point');
 
 function Input(canvas) {
@@ -268,7 +274,23 @@ Input.prototype.keydown = function (event) {
 
 module.exports = Input;
 
-},{"./Point":8}],8:[function(require,module,exports){
+},{"./Point":10}],9:[function(require,module,exports){
+module.exports = {
+    'get_distance': function (start, target) {
+        'use strict';
+        var xs = target.x - start.x;
+        xs *= xs;
+        var ys = target.y - start.y;
+        ys = ys * ys;
+        return Math.sqrt(xs + ys);
+    },
+    'get_angle_of_line': function (start, target) {
+        'use strict';
+        return Math.atan2(target.x - start.x, target.y - start.y);
+    }
+};
+
+},{}],10:[function(require,module,exports){
 function Point(x, y) {
     'use strict';
     this.x = x;
@@ -277,7 +299,7 @@ function Point(x, y) {
 
 module.exports = Point;
 
-},{}],9:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 var Point = require('./Point');
 
 function ProgressBar(position, min, max, text) {
@@ -323,4 +345,4 @@ ProgressBar.prototype.calculate_width = function () {
 
 module.exports = ProgressBar;
 
-},{"./Point":8}]},{},[3])
+},{"./Point":10}]},{},[4])
