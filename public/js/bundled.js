@@ -173,9 +173,20 @@ function GameObject() {
 
 GameObject.prototype.update = function () {
     'use strict';
-    this.position.x += this.velocity.x * this.friction;
-    this.position.y += this.velocity.y * this.friction;
 
+    this.position.x += this.velocity.x + (this.velocity.x * this.friction);
+    this.position.y += this.velocity.y + (this.velocity.y * this.friction);
+
+    if (this.position.x >= 640) {
+        this.position.x = 640;
+    } else if (this.position.x <= 5) {
+        this.position.x = 5;
+    }
+    if (this.position.y >= 480) {
+        this.position.y = 480;
+    } else if (this.position.y <= 2) {
+        this.position.y = 2;
+    }
 };
 
 GameObject.prototype.draw = function (context) {
@@ -238,7 +249,7 @@ function Player() {
     GameObject.call(this);
     this.position = new Point(2, 36);
     this.bar = new ProgressBar(this.position, 100, 100, 'Ham Left');
-    this.speed = 4;
+    this.speed = 2;
 }
 
 module.exports = Player;
