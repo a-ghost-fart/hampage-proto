@@ -45,17 +45,26 @@ Game.prototype.update = function () {
     this.fps = this.calculate_fps(now);
 
     // TODO: Abstract this input stuff
+    var speed = this.player.speed;
     if (this.input.is_key_down(Keys.RIGHT)) {
-        this.player.add_motion(90, this.player.speed);
+        if (this.player.velocity.x < speed) {
+            this.player.velocity.x++;
+        }
     }
     if (this.input.is_key_down(Keys.LEFT)) {
-        this.player.add_motion(270, this.player.speed);
+        if (this.player.velocity.x > -speed) {
+            this.player.velocity.x--;
+        }
     }
     if (this.input.is_key_down(Keys.UP)) {
-        this.player.add_motion(0, this.player.speed);
+        if (this.player.velocity.y > -speed) {
+            this.player.velocity.y--;
+        }
     }
     if (this.input.is_key_down(Keys.DOWN)) {
-        this.player.add_motion(180, this.player.speed);
+        if (this.player.velocity.y < speed) {
+            this.player.velocity.y++;
+        }
     }
 
     for (var entity in this.entities) {
@@ -88,11 +97,11 @@ Game.prototype.draw = function () {
     // TODO: Remove it all
     var start = this.player.position;
     var mouse = this.input.get_mouse_position();
-    var how_far = Math.floor(MathUtils.get_distance(start, mouse));
+    var line_length = Math.floor(MathUtils.get_distance(start, mouse));
 
     var angle = MathUtils.get_angle_of_line(start, mouse);
-    var steps = Math.ceil(how_far / 27);
-    var distance = how_far / steps;
+    var steps = Math.ceil(line_length / 27);
+    var distance = line_length / steps;
     var sin = Math.sin(angle) * distance;
     var cos = Math.cos(angle) * distance;
 

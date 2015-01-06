@@ -60,17 +60,26 @@ Game.prototype.update = function () {
     this.fps = this.calculate_fps(now);
 
     // TODO: Abstract this input stuff
+    var speed = this.player.speed;
     if (this.input.is_key_down(Keys.RIGHT)) {
-        this.player.add_motion(90, this.player.speed);
+        if (this.player.velocity.x < speed) {
+            this.player.velocity.x++;
+        }
     }
     if (this.input.is_key_down(Keys.LEFT)) {
-        this.player.add_motion(270, this.player.speed);
+        if (this.player.velocity.x > -speed) {
+            this.player.velocity.x--;
+        }
     }
     if (this.input.is_key_down(Keys.UP)) {
-        this.player.add_motion(0, this.player.speed);
+        if (this.player.velocity.y > -speed) {
+            this.player.velocity.y--;
+        }
     }
     if (this.input.is_key_down(Keys.DOWN)) {
-        this.player.add_motion(180, this.player.speed);
+        if (this.player.velocity.y < speed) {
+            this.player.velocity.y++;
+        }
     }
 
     for (var entity in this.entities) {
@@ -103,11 +112,11 @@ Game.prototype.draw = function () {
     // TODO: Remove it all
     var start = this.player.position;
     var mouse = this.input.get_mouse_position();
-    var how_far = Math.floor(MathUtils.get_distance(start, mouse));
+    var line_length = Math.floor(MathUtils.get_distance(start, mouse));
 
     var angle = MathUtils.get_angle_of_line(start, mouse);
-    var steps = Math.ceil(how_far / 27);
-    var distance = how_far / steps;
+    var steps = Math.ceil(line_length / 27);
+    var distance = line_length / steps;
     var sin = Math.sin(angle) * distance;
     var cos = Math.cos(angle) * distance;
 
@@ -158,9 +167,16 @@ var Constants = require('../conf/Constants');
 function GameObject() {
     'use strict';
     this.position = new Point(0, 0);
+    this.velocity = new Point(0, 0);
+    this.friction = 0.98;
 }
 
-GameObject.prototype.update = function () {};
+GameObject.prototype.update = function () {
+    'use strict';
+    this.position.x += this.velocity.x * this.friction;
+    this.position.y += this.velocity.y * this.friction;
+
+};
 
 GameObject.prototype.draw = function (context) {
     'use strict';
@@ -168,11 +184,6 @@ GameObject.prototype.draw = function (context) {
     context.fillRect(this.position.x, this.position.y, 32, 32);
 
     this.bar.draw(context);
-};
-
-GameObject.prototype.add_motion = function (angle, speed) {
-    'use strict';
-    this.position.x += speed * (Math.cos(angle));
 };
 
 module.exports = GameObject;
@@ -227,7 +238,6 @@ function Player() {
     GameObject.call(this);
     this.position = new Point(2, 36);
     this.bar = new ProgressBar(this.position, 100, 100, 'Ham Left');
-    this.accelleration = 0.1;
     this.speed = 4;
 }
 

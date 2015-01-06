@@ -11,7 +11,6 @@ function Player() {
     GameObject.call(this);
     this.position = new Point(2, 36);
     this.bar = new ProgressBar(this.position, 100, 100, 'Ham Left');
-    this.accelleration = 0.1;
     this.speed = 4;
 }
 
