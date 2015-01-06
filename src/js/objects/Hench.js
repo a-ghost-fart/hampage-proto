@@ -31,13 +31,4 @@ Hench.prototype.update = function () {
     this.bar.position = this.position;
 };
 
-Hench.prototype.draw = function (context) {
-    'use strict';
-
-    context.fillStyle = '#fff';
-    context.fillRect(this.position.x, this.position.y, 32, 32);
-
-    this.bar.draw(context);
-};
-
 module.exports = Hench;

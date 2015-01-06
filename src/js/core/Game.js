@@ -2,9 +2,15 @@ var Player = require('../objects/Player');
 var Hench = require('../objects/Hench');
 var Input = require('../util/Input');
 var Keys = require('../conf/Keys');
+var MathUtils = require('../util/MathUtils');
 
 function Game() {
     'use strict';
+    this.last_frame = Date.now();
+    this.frame_count = 0;
+    this.fps = 0;
+    this.tick_time = 0;
+
     this.entities = [];
     this.player = new Player();
     this.hench = new Hench();
@@ -33,6 +39,24 @@ Game.prototype.game_loop = function () {
 
 Game.prototype.update = function () {
     'use strict';
+    var now = Date.now();
+    var delta = now - this.last_frame;
+    this.last_frame = now;
+    this.fps = this.calculate_fps(now);
+
+    // TODO: Abstract this input stuff
+    if (this.input.is_key_down(Keys.RIGHT)) {
+        this.player.add_motion(90, this.player.speed);
+    }
+    if (this.input.is_key_down(Keys.LEFT)) {
+        this.player.add_motion(270, this.player.speed);
+    }
+    if (this.input.is_key_down(Keys.UP)) {
+        this.player.add_motion(0, this.player.speed);
+    }
+    if (this.input.is_key_down(Keys.DOWN)) {
+        this.player.add_motion(180, this.player.speed);
+    }
 
     for (var entity in this.entities) {
         if (this.entities.hasOwnProperty(entity)) {
@@ -41,24 +65,32 @@ Game.prototype.update = function () {
     }
 };
 
+Game.prototype.calculate_fps = function (now) {
+    'use strict';
+    var fps;
+    this.frame_count++;
+    if (now - this.tick_time >= 1000) {
+        fps = this.frame_count;
+        this.tick_time = now;
+        this.frame_count = 0;
+    } else {
+        fps = this.fps;
+    }
+    return fps;
+};
+
 Game.prototype.draw = function () {
     'use strict';
 
     this.clear_canvas();
 
     // Horrible block of testing stuff
+    // TODO: Remove it all
     var start = this.player.position;
     var mouse = this.input.get_mouse_position();
+    var how_far = Math.floor(MathUtils.get_distance(start, mouse));
 
-    var xs = 0;
-    var ys = 0;
-    xs = mouse.x - start.x;
-    xs = xs * xs;
-    ys = mouse.y - start.y;
-    ys = ys * ys;
-    var how_far = Math.floor(Math.sqrt(xs + ys));
-
-    var angle = Math.atan2(mouse.x - start.x, mouse.y - start.y);
+    var angle = MathUtils.get_angle_of_line(start, mouse);
     var steps = Math.ceil(how_far / 27);
     var distance = how_far / steps;
     var sin = Math.sin(angle) * distance;
@@ -67,8 +99,6 @@ Game.prototype.draw = function () {
     var img = new Image();
     img.src = './assets/arm.png';
 
-    this.context.strokeStyle = '#fff';
-
     for (var i = 0; i <= steps; i++) {
         this.context.save();
         this.context.translate(start.x + (i * sin), start.y + (i * cos));
@@ -76,29 +106,6 @@ Game.prototype.draw = function () {
         this.context.drawImage(img, 0, 0);
         this.context.restore();
     }
-
-    var speed = 5;
-    var hench_speed = 2;
-    if (this.input.is_key_down(Keys.UP)) {
-        this.player.position.y -= speed;
-    }
-    if (this.input.is_key_down(Keys.DOWN)) {
-        this.player.position.y += speed;
-    }
-    if (this.input.is_key_down(Keys.LEFT)) {
-        this.player.position.x -= speed;
-    }
-    if (this.input.is_key_down(Keys.RIGHT)) {
-        this.player.position.x += speed;
-    }
-    var hench_movement_x = (this.hench.position.x > this.player.position.x)
-        ? -hench_speed
-        : hench_speed;
-    var hench_movement_y = (this.hench.position.y > this.player.position.y)
-        ? -hench_speed
-        : hench_speed;
-    this.hench.position.x += hench_movement_x;
-    this.hench.position.y += hench_movement_y;
     // End horrible block of testing stuff
 
 
